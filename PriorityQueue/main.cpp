@@ -67,22 +67,27 @@ public:
 	void modifyNodePriorityOfGivenValue(T val, int new_prio) {
 		SNode<T>* current = head;
 		SNode<T>* preReInsertPlace = nullptr;
+		SNode<T>* nodeForChange = nullptr;
 		if (head->priority < new_prio) preReInsertPlace = head;
-		while (current) {
-			if (current->priority < new_prio)
-			if (current->next->value == val) {
-				SNode<T>* temp = current->next;
+		while (current && !(preReInsertPlace && nodeForChange)) {
+			if (current->next->priority < new_prio && preReInsertPlace == nullptr) {
+				preReInsertPlace = current;
+			}
+			if (current->next->value == val && nodeForChange == nullptr) {
+				nodeForChange = current->next;
 				if (current->priority < new_prio) {
-
+					current->next = nodeForChange->next;
 				}
-				else if (temp->next != nullptr) {
-					if (temp->next->priority > new_prio) {
-
+				else if (nodeForChange->next != nullptr) {
+					if (nodeForChange->next->priority > new_prio) {
+						current->next = nodeForChange->next;
 					}
 				}
 			}
 			current = current->next;
 		}
+		nodeForChange->next = preReInsertPlace->next;
+		preReInsertPlace->next = nodeForChange;
 	}
 
 	void clearList() {
