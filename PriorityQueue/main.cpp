@@ -31,6 +31,7 @@ public:
 		if (head) {
 			return head->value;
 		}
+		return T();
 	}
 	unsigned int getSize() const {
 		return size;
@@ -43,26 +44,20 @@ public:
 			size++;
 		}
 		else {
-			SNode<T>* current = head->next;
-			while (currnet->next != nullptr) {
-				if (current->next->priority <= prio) {
-					newNode->next = current->next;
-					current->next = newNode;
-					size++;
-					return;
-				}
+			SNode<T>* current = head;
+			while (current->next != nullptr && current->next->priority >= prio) {
 				current = current->next;
 			}
 			newNode->next = current->next;
 			current->next = newNode;
 			size++;
-			return;
 		}
 	}
 	void Dequeue() {
 		SNode<T>* temp = head;
 		head = head->next;
 		delete temp;
+		size--;
 	}
 	void modifyNodePriorityOfGivenValue(T val, int new_prio) {
 		SNode<T>* current = head;
