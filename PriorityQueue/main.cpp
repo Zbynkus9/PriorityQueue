@@ -59,30 +59,42 @@ public:
 		delete temp;
 		size--;
 	}
-	void modifyNodePriorityOfGivenValue(T val, int new_prio) {
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DO NAPRAWY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      ||	 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      ||	 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		\/	 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	void modifyNodePriorityOfGivenValue(T val, int new_prio) { 
+		if (head == nullptr) return; // Lista jest pusta
 		SNode<T>* current = head;
 		SNode<T>* preReInsertPlace = nullptr;
 		SNode<T>* nodeForChange = nullptr;
 		if (head->priority < new_prio) preReInsertPlace = head;
-		while (current && !(preReInsertPlace && nodeForChange)) {
-			if (current->next->priority < new_prio && preReInsertPlace == nullptr) {
-				preReInsertPlace = current;
+		for (; current != nullptr; current = current->next) {
+			if (current->value == val) {
+				nodeForChange = current;
+				break;
 			}
-			if (current->next->value == val && nodeForChange == nullptr) {
-				nodeForChange = current->next;
-				if (current->priority < new_prio) {
-					current->next = nodeForChange->next;
-				}
-				else if (nodeForChange->next != nullptr) {
-					if (nodeForChange->next->priority > new_prio) {
-						current->next = nodeForChange->next;
-					}
-				}
-			}
-			current = current->next;
 		}
-		nodeForChange->next = preReInsertPlace->next;
-		preReInsertPlace->next = nodeForChange;
+		if (!nodeForChange) return; // Nie znaleziono wezla do zmiany
+		current = head;
+		if (preReInsertPlace != head) {
+			for (; current->next != nullptr; current = current->next) {
+				if (current->next->priority < new_prio) {
+					preReInsertPlace = current;
+					break;
+				}
+			}
+		}
+		if (!preReInsertPlace) return; // Nie znaleziono miejsca do wstawienia
+		else if (preReInsertPlace == head) {
+			nodeForChange->next = head;
+			head = nodeForChange;
+		}
+		else {
+			preReInsertPlace->next = preReInsertPlace->next->next;
+			nodeForChange->next = preReInsertPlace->next;
+			preReInsertPlace->next = nodeForChange;
+		}
 	}
 
 	void clearList() {
@@ -94,14 +106,14 @@ public:
 		size = 0;
 	}	
 private:
-	SNode<T>* head
+	SNode<T>* head;
 	unsigned int size;
 };
 
 template<typename T>
 class DArrElement {
 public:
-	DArrElement() : value(T()) {}
+	DArrElement() : value(T()), priority(0) {}
 	DArrElement(T val, int prio) : value(val), priority(prio) {}
 	T getValue() const {
 		return value;
@@ -193,7 +205,7 @@ private:
 
 int main() {
 	srand(time(NULL)); // Inicjalizacja generatora liczb losowych
-	const unsigned int iteracje = 10000;
+	const unsigned int iteracje = 100;
 
 	const string sortingResultsFiles[] = {
 		"SLinkedListPriorityQueue_results.csv",
@@ -201,8 +213,11 @@ int main() {
 	};
 	const int sortingResultsFilesAmount = sizeof(sortingResultsFiles) / sizeof(sortingResultsFiles[0]); // Obliczenie liczby plikow
 
-
-	long long sortTimes[5][iteracje];
+	// Tablica do przechowywania czasow sortowania  
+    long long** sortTimes = new long long*[5];  
+    for (int i = 0; i < 5; i++) {  
+        sortTimes[i] = new long long[iteracje];  
+    }
 	
 	SLinkedListPriorityQueue<int> listQueue;
 	DArrayPriorityQueue<int> arrayQueue;
@@ -225,15 +240,11 @@ int main() {
 		switch (i)
 		{
 		case 0:
-			for (int j = 1; j <= iteracje; j++) {
+			for (int j = 0; j < iteracje; j++) {
 				auto start = chrono::high_resolution_clock::now();
 				listQueue.Enqueue(j, rand() % 100);
 				auto end = chrono::high_resolution_clock::now();
 				sortTimes[0][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
-				start = chrono::high_resolution_clock::now();
-				listQueue.Dequeue();
-				end = chrono::high_resolution_clock::now();
-				sortTimes[1][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
 				start = chrono::high_resolution_clock::now();
 				listQueue.getSize();
 				end = chrono::high_resolution_clock::now();
@@ -242,25 +253,63 @@ int main() {
 				listQueue.Peek();
 				end = chrono::high_resolution_clock::now();
 				sortTimes[3][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (j == iteracje / 4) {
+					cout << "Dodano 25% elementow do kolejki" << endl;
+				}
+				else if (j == iteracje / 2) {
+					cout << "Dodano 50% elementow do kolejki" << endl;
+				}
+				else if (j == (3 * iteracje) / 4) {
+					cout << "Dodano 75% elementow do kolejki" << endl;
+				}
+				else if (j == iteracje) {
+					cout << "Dodano 100% elementow do kolejki" << endl;
+				}
 			}
-			for (int k = 1; k <= iteracje; k++) {
+			for (int k = 0; k < iteracje; k++) {
 				auto start = chrono::high_resolution_clock::now();
-				listQueue.modifyNodePriorityOfGivenValue(j, rand() % 100);
+				listQueue.modifyNodePriorityOfGivenValue(k, rand() % 100);
 				auto end = chrono::high_resolution_clock::now();
-				sortTimes[4][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				sortTimes[4][k] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (k == iteracje / 4) {
+					cout << "Zmieniono priorytet 25% elementow w kolejce" << endl;
+				}
+				else if (k == iteracje / 2) {
+					cout << "Zmieniono priorytet 50% elementow w kolejce" << endl;
+				}
+				else if (k == (3 * iteracje) / 4) {
+					cout << "Zmieniono priorytet 75% elementow w kolejce" << endl;
+				}
+				else if (k == iteracje) {
+					cout << "Zmieniono priorytet 100% elementow w kolejce" << endl;
+				}
+			}
+			for (int l = 0; l < iteracje; l++) {
+				auto start = chrono::high_resolution_clock::now();
+				listQueue.Dequeue();
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[1][l] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (l == iteracje / 4) {
+					cout << "Usunieto 25% elementow z kolejki" << endl;
+				}
+				else if (l == iteracje / 2) {
+					cout << "Usunieto 50% elementow z kolejki" << endl;
+				}
+				else if (l == (3 * iteracje) / 4) {
+					cout << "Usunieto 75% elementow z kolejki" << endl;
+				}
+				else if (l == iteracje) {
+					cout << "Usunieto 100% elementow z kolejki" << endl;
+				}
 			}
 			break;
 
 		case 1:
-			for (int j = 1; j <= iteracje; j++) {
+			for (int j = 0; j < iteracje; j++) {
 				auto start = chrono::high_resolution_clock::now();
 				arrayQueue.Enqueue(j, rand() % 100);
 				auto end = chrono::high_resolution_clock::now();
 				sortTimes[0][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
-				start = chrono::high_resolution_clock::now();
-				arrayQueue.Dequeue();
-				end = chrono::high_resolution_clock::now();
-				sortTimes[1][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
 				start = chrono::high_resolution_clock::now();
 				arrayQueue.getSize();
 				end = chrono::high_resolution_clock::now();
@@ -269,12 +318,54 @@ int main() {
 				arrayQueue.Peek();
 				end = chrono::high_resolution_clock::now();
 				sortTimes[3][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (j == iteracje / 4) {
+					cout << "Dodano 25% elementow do kolejki" << endl;
+				}
+				else if (j == iteracje / 2) {
+					cout << "Dodano 50% elementow do kolejki" << endl;
+				}
+				else if (j == (3 * iteracje) / 4) {
+					cout << "Dodano 75% elementow do kolejki" << endl;
+				}
+				else if (j == iteracje) {
+					cout << "Dodano 100% elementow do kolejki" << endl;
+				}
 			}
-			for (int k = 1; k <= iteracje; k++) {
+			for (int k = 0; k < iteracje; k++) {
 				auto start = chrono::high_resolution_clock::now();
-				arrayQueue.modifyNodePriorityOfGivenValue(j, rand() % 100);
+				arrayQueue.modifyNodePriorityOfGivenValue(k, rand() % 100);
 				auto end = chrono::high_resolution_clock::now();
-				sortTimes[4][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				sortTimes[4][k] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (k == iteracje / 4) {
+					cout << "Zmieniono priorytet 25% elementow w kolejce" << endl;
+				}
+				else if (k == iteracje / 2) {
+					cout << "Zmieniono priorytet 50% elementow w kolejce" << endl;
+				}
+				else if (k == (3 * iteracje) / 4) {
+					cout << "Zmieniono priorytet 75% elementow w kolejce" << endl;
+				}
+				else if (k == iteracje) {
+					cout << "Zmieniono priorytet 100% elementow w kolejce" << endl;
+				}
+			}
+			for (int l = 0; l < iteracje; l++) {
+				auto start = chrono::high_resolution_clock::now();
+				arrayQueue.Dequeue();
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[1][l] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				if (l == iteracje / 4) {
+					cout << "Usunieto 25% elementow z kolejki" << endl;
+				}
+				else if (l == iteracje / 2) {
+					cout << "Usunieto 50% elementow z kolejki" << endl;
+				}
+				else if (l == (3 * iteracje) / 4) {
+					cout << "Usunieto 75% elementow z kolejki" << endl;
+				}
+				else if (l == iteracje) {
+					cout << "Usunieto 100% elementow z kolejki" << endl;
+				}
 			}
 			break;
 
