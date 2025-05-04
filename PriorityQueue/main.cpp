@@ -106,6 +106,9 @@ public:
 	T getValue() const {
 		return value;
 	}
+	int getPriority() const {
+		return priority;
+	}
 private:
 	T value;
 	int priority;
@@ -132,6 +135,55 @@ public:
 	}
 	void clearArray() {
 		size = 0;
+	}
+	T Peek() {
+		if (size == 0) {
+			return T();
+		}
+		int maxPrio = arr[0].getPriority();
+		int maxIndex = 0;
+		for (unsigned int i = 0; i < size; i++) {
+			if (arr[i].getPriority() > maxPrio) {
+				maxPrio = arr[i].getPriority();
+				maxIndex = i;
+			}
+		}
+		return arr[maxIndex].getValue();
+	}
+	unsigned int getSize() const {
+		return size;
+	}
+	void Enqueue(T val, int prio) {
+		if (size == capacity) {
+			resizeAndCopy();
+		}
+		arr[size] = DArrElement<T>(val, prio);
+		size++;
+	}
+	void Dequeue() {
+		if (size == 0) {
+			return;
+		}
+		int maxPrio = arr[0].getPriority();
+		int maxIndex = 0;
+		for (unsigned int i = 0; i < size; i++) {
+			if (arr[i].getPriority() > maxPrio) {
+				maxPrio = arr[i].getPriority();
+				maxIndex = i;
+			}
+		}
+		for (unsigned int i = maxIndex; i < size - 1; i++) {
+			arr[i] = arr[i + 1];
+		}
+		size--;
+	}
+	void modifyNodePriorityOfGivenValue(T val, int new_prio) {
+		for (unsigned int i = 0; i < size; i++) {
+			if (arr[i].getValue() == val) {
+				arr[i] = DArrElement<T>(val, new_prio);
+				break;
+			}
+		}
 	}
 private:
 	DArrElement<T>* arr;
