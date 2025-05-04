@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <chrono>
 
@@ -192,5 +192,111 @@ private:
 };
 
 int main() {
+	srand(time(NULL)); // Inicjalizacja generatora liczb losowych
+	const unsigned int iteracje = 10000;
+
+	const string sortingResultsFiles[] = {
+		"SLinkedListPriorityQueue_results.csv",
+		"DArrayPriorityQueue_results.csv",
+	};
+	const int sortingResultsFilesAmount = sizeof(sortingResultsFiles) / sizeof(sortingResultsFiles[0]); // Obliczenie liczby plikow
+
+
+	long long sortTimes[5][iteracje];
+	
+	SLinkedListPriorityQueue<int> listQueue;
+	DArrayPriorityQueue<int> arrayQueue;
+
+	ofstream file;
+
+	for (int i = 0; i < sortingResultsFilesAmount; i++) {
+
+		file.open(sortingResultsFiles[i]);
+
+		if (!file.is_open()) {
+			cerr << "Nie mozna otworzyc pliku: " << sortingResultsFiles[i] << endl;
+			return 1;
+		}
+
+		file << "Iteracja, Dodawanie elementu, Usuwanie elementu, Zwracanie rozmiaru kolejki, Peek, Modyfikacja priorytetu określonego elementu";
+		file << endl;
+		cout << "\nNaglowek napisany dla pliku: " << sortingResultsFiles[i] << endl;
+
+		switch (i)
+		{
+		case 0:
+			for (int j = 1; j <= iteracje; j++) {
+				auto start = chrono::high_resolution_clock::now();
+				listQueue.Enqueue(j, rand() % 100);
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[0][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				listQueue.Dequeue();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[1][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				listQueue.getSize();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[2][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				listQueue.Peek();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[3][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+			}
+			for (int k = 1; k <= iteracje; k++) {
+				auto start = chrono::high_resolution_clock::now();
+				listQueue.modifyNodePriorityOfGivenValue(j, rand() % 100);
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[4][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+			}
+			break;
+
+		case 1:
+			for (int j = 1; j <= iteracje; j++) {
+				auto start = chrono::high_resolution_clock::now();
+				arrayQueue.Enqueue(j, rand() % 100);
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[0][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				arrayQueue.Dequeue();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[1][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				arrayQueue.getSize();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[2][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+				start = chrono::high_resolution_clock::now();
+				arrayQueue.Peek();
+				end = chrono::high_resolution_clock::now();
+				sortTimes[3][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+			}
+			for (int k = 1; k <= iteracje; k++) {
+				auto start = chrono::high_resolution_clock::now();
+				arrayQueue.modifyNodePriorityOfGivenValue(j, rand() % 100);
+				auto end = chrono::high_resolution_clock::now();
+				sortTimes[4][j] = chrono::duration_cast<chrono::microseconds>(end - start).count();
+			}
+			break;
+
+		default:
+			break;
+		}
+
+
+		cout << "Zapisuje wyniki do pliku: " << sortingResultsFiles[i] << endl;
+
+		for (int j = 0; j < iteracje; j++) {
+			file << j + 1 << ","; // Iteracja
+			file << sortTimes[0][j] << ","; // Dodawanie elementu
+			file << sortTimes[1][j] << ","; // Usuwanie elementu
+			file << sortTimes[2][j] << ","; // Zwracanie rozmiaru kolejki
+			file << sortTimes[3][j] << ","; // Peek
+			file << sortTimes[4][j] << ","; // Modyfikacja priorytetu
+			file << endl;
+		}
+
+		file.close();
+
+	}
 	return 0;
 }
